@@ -1,0 +1,20 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+' Custom fields for quotes and orders
+' Originally for Gayesco
+' 1/18/10
+' JSO
+' Hook 10,710 (quote header populate)
+
+Variable.Passed.000201.Set("Custom Flds")
+
+
+Program.Sub.Main.End
+
+
