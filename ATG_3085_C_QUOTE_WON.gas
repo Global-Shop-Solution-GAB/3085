@@ -1,0 +1,53 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+' Custom fields for quotes and orders
+' Originally for Gayesco
+' 2/1/10
+' JSO
+' Hook 17,301 (fires when a quote is won)
+
+Function.ODBC.Connection!con.OpenConnection(Variable.Ambient.PDSN,Variable.Ambient.PUser,Variable.Ambient.PPass)
+F.Intrinsic.Control.CallSub(Movetoorder)
+
+Program.Sub.Main.End
+
+Program.Sub.MovetoOrder.Start
+Variable.Local.sOrder.Declare(String)
+Variable.Local.sQuote.Declare(String)
+Variable.Local.sSQL.Declare(String)
+
+V.Local.sOrder.set(Variable.Passed.ORDER)
+V.Local.sQuote.set(Variable.Passed.QUOTE)
+
+Function.Intrinsic.String.Concat("SELECT * FROM ATG_89_G_QUOTE_CSTM WHERE QUOTE = '",V.Local.sQuote,"'",V.Local.sSQL)
+Function.ODBC.Connection!con.OpenRecordsetRO("rst",V.Local.sSQL)
+Function.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+		Function.Intrinsic.string.concat("SELECT * FROM ATG_89_G_ORDER_CSTM WHERE ORDERNO = '",V.Local.sOrder,"'",V.Local.sSQL)
+		Function.ODBC.Connection!con.OpenRecordsetRW("rst1",V.Local.sSQL)
+		Function.Intrinsic.Control.If(V.ODBC.con!rst1.EOF,=,True)
+			Function.ODBC.con!rst1.AddNew
+			F.ODBC.con!rst1.Set!ORDERNO(V.Local.sOrder)
+		Function.Intrinsic.Control.EndIf
+		F.ODBC.con!rst1.Set!CATEGORY(V.ODBC.con!rst.FieldVal!CATEGORY)
+		F.ODBC.con!rst1.Set!COMMENTS(V.ODBC.con!rst.FieldVal!COMMENTS)
+		Function.ODBC.con!rst1.Set!DATE_CREATED(Variable.Ambient.now)
+		F.ODBC.con!rst1.Update
+		F.ODBC.con!rst1.Close
+Function.Intrinsic.Control.EndIf
+Function.ODBC.con!rst.Close
+
+	
+
+Program.Sub.MovetoOrder.End
+
+Program.Sub.Newsub.Start
+
+Program.Sub.Newsub.End
+
+
