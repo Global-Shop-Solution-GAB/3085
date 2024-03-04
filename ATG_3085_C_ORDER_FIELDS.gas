@@ -1,0 +1,151 @@
+Program.Sub.ScreenSU.Start
+gui.Form1..create
+gui.Form1..caption("Custom Fields")
+gui.Form1..size(7560,6105)
+gui.Form1..position(0,0)
+gui.Form1..event(unload,form1_unload)
+gui.Form1..alwaysontop(False)
+gui.Form1..fontname("Arial")
+gui.Form1..fontsize(8)
+gui.Form1..forecolor(0)
+gui.Form1..fontstyle(,,,,)
+gui.Form1..BackColor(-2147483633)
+gui.Form1..controlbox(True)
+gui.Form1..maxbutton(True)
+gui.Form1..minbutton(True)
+gui.Form1..mousepointer(0)
+gui.Form1..moveable(True)
+gui.Form1..sizeable(True)
+gui.Form1..ShowInTaskBar(True)
+gui.Form1..titlebar(True)
+gui.Form1.lbl1.create(label,"Order",True,870,255,0,350,200,True,2,Arial,8,-2147483633,0)
+gui.Form1.txtOrder.create(textbox,"",True,1395,300,0,145,400,False,0,Arial,8,-2147483643,1)
+gui.Form1.lbl2.create(label,"Category",True,1830,255,0,2335,200,True,2,Arial,8,-2147483633,0)
+gui.Form1.ddlCat.create(dropdownlist)
+gui.Form1.ddlCat.visible(True)
+gui.Form1.ddlCat.size(1920,330)
+gui.Form1.ddlCat.zorder(0)
+gui.Form1.ddlCat.position(2300,400)
+gui.Form1.ddlCat.enabled(True)
+gui.Form1.ddlCat.fontname("Arial")
+gui.Form1.ddlCat.fontsize(8)
+gui.Form1.lbl3.create(label,"Comments",True,885,255,0,265,1060,True,0,Arial,8,-2147483633,0)
+gui.Form1.mltxtComments.create(textboxm)
+gui.Form1.mltxtComments.text("")
+gui.Form1.mltxtComments.visible(True)
+gui.Form1.mltxtComments.size(6900,3915)
+gui.Form1.mltxtComments.zorder(0)
+gui.Form1.mltxtComments.position(235,1400)
+gui.Form1.mltxtComments.enabled(True)
+gui.Form1.mltxtComments.alignment(0)
+gui.Form1.mltxtComments.fontname("Arial")
+gui.Form1.mltxtComments.fontsize(8)
+gui.Form1.mltxtComments.BackColor(-2147483643)
+gui.Form1.cmdSave.create(button)
+gui.Form1.cmdSave.caption("Save")
+gui.Form1.cmdSave.visible(True)
+gui.Form1.cmdSave.size(1035,480)
+gui.Form1.cmdSave.zorder(0)
+gui.Form1.cmdSave.position(5820,340)
+gui.Form1.cmdSave.enabled(True)
+gui.Form1.cmdSave.fontname("Arial")
+gui.Form1.cmdSave.fontsize(8)
+gui.Form1.cmdSave.event(click,cmdsave_click)
+gui.Form1.ddlCat.tabstop(True)
+gui.Form1.ddlCat.tabindex(1)
+gui.Form1.mltxtComments.tabstop(True)
+gui.Form1.mltxtComments.tabindex(2)
+gui.Form1.cmdSave.tabstop(True)
+gui.Form1.cmdSave.tabindex(3)
+
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Variable.Global.sOrderNum.Declare(String)
+Program.Sub.Preflight.End
+
+
+Program.Sub.Main.Start
+' Custom fields for quotes and orders
+' Originally for Gayesco
+' 1/15/10
+' JSO
+' Hook 11,910 (order header script 1 button)
+
+Function.ODBC.Connection!con.OpenConnection(Variable.Ambient.PDSN,Variable.Ambient.PUser,Variable.Ambient.PPass)
+
+' quote number
+Function.Intrinsic.String.LPad(Variable.Passed.000003,"0",7,Variable.Global.sOrderNum)
+
+Function.Intrinsic.Control.CallSub(Loadcats)
+
+Gui.Form1.txtOrder.Text(Variable.Global.sOrderNum)
+
+Gui.form1..show
+
+Program.Sub.Main.End
+
+
+program.sub.cmdsave_click.start
+Variable.Local.sComments.Declare(String)
+Variable.Local.sCategory.Declare(String)
+Variable.Local.sSql.Declare(String)
+
+Function.intrinsic.string.concat("SELECT * FROM ATG_89_G_ORDER_CSTM WHERE ORDERNO = '",Variable.global.sOrderNum,"'",Variable.local.sSql)
+Function.ODBC.Connection!con.OpenRecordsetRW("rst1",Variable.Local.sSql)
+Function.Intrinsic.Control.If(Variable.ODBC.con!rst1.eof,=,True)
+	' create new record
+	Function.ODBC.con!rst1.AddNew
+	Function.ODBC.con!rst1.Set!ORDERNO(Variable.Global.sOrderNum)
+Function.Intrinsic.Control.EndIf
+Function.ODBC.con!rst1.Set!CATEGORY(Variable.Screen.Form1!ddlCat.Text)
+Function.ODBC.con!rst1.Set!COMMENTS(Variable.Screen.Form1!mltxtComments.Text)
+Function.ODBC.con!rst1.Set!DATE_CREATED(Variable.Ambient.now)
+Function.ODBC.con!rst1.Update
+
+Function.ODBC.con!rst1.Close
+
+Function.Intrinsic.Control.CallSub(Form1_unload)
+
+program.sub.cmdsave_click.end
+
+
+program.sub.form1_unload.start
+Function.Intrinsic.Control.End
+
+Function.ODBC.Connection!Con.close
+
+program.sub.form1_unload.end
+
+
+Program.Sub.LoadCats.Start
+Variable.Local.sSQL.Declare(String)
+
+Variable.Local.sSQL.Set("SELECT CATEGORY FROM ATG_89_G_CATS")
+Function.ODBC.Connection!con.OpenRecordsetRO("rst1",Variable.Local.sSQL)
+
+Function.Intrinsic.Control.Dountil(Variable.ODBC.con!rst1.EOF,=,True)
+	Gui.Form1.ddlCat.AddItem(Variable.ODBC.con!rst1.FieldVal!CATEGORY)
+	Function.ODBC.con!rst1.Movenext
+Function.Intrinsic.Control.loop
+
+Function.ODBC.con!rst1.Close
+
+Function.intrinsic.string.concat("SELECT * FROM ATG_89_G_ORDER_CSTM WHERE ORDERNO = '",Variable.global.sOrderNum,"'",Variable.local.sSql)
+Function.ODBC.Connection!con.OpenRecordsetRO("rst1",Variable.Local.sSql)
+Function.Intrinsic.Control.If(Variable.ODBC.con!rst1.eof,<>,True)
+	Gui.Form1.ddlCat.Text(Variable.ODBC.con!rst1.FieldVal!CATEGORY)
+	Gui.Form1.mltxtComments.Text(Variable.ODBC.con!rst1.FieldVal!COMMENTS)
+Function.Intrinsic.Control.EndIf
+
+Function.ODBC.con!rst1.Close
+
+
+
+Program.Sub.LoadCats.End
+
+
+
