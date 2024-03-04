@@ -1,0 +1,122 @@
+Program.Sub.ScreenSU.Start
+gui.Form1..create
+gui.Form1..caption("Order Comments View")
+gui.Form1..size(6405,6945)
+gui.Form1..position(0,0)
+gui.Form1..event(unload,form1_unload)
+gui.Form1..alwaysontop(False)
+gui.Form1..fontname("Arial")
+gui.Form1..fontsize(8)
+gui.Form1..forecolor(0)
+gui.Form1..fontstyle(,,,,)
+gui.Form1..BackColor(-2147483633)
+gui.Form1..controlbox(True)
+gui.Form1..maxbutton(True)
+gui.Form1..minbutton(True)
+gui.Form1..mousepointer(0)
+gui.Form1..moveable(True)
+gui.Form1..sizeable(True)
+gui.Form1..ShowInTaskBar(True)
+gui.Form1..titlebar(True)
+gui.Form1.cmd1.create(button)
+gui.Form1.cmd1.caption("^")
+gui.Form1.cmd1.visible(True)
+gui.Form1.cmd1.size(495,390)
+gui.Form1.cmd1.zorder(0)
+gui.Form1.cmd1.position(5200,355)
+gui.Form1.cmd1.enabled(True)
+gui.Form1.cmd1.fontname("Arial")
+gui.Form1.cmd1.fontsize(8)
+gui.Form1.cmd1.event(click,cmd1_click)
+gui.Form1.txtOrderNum.create(textbox,"",True,1365,300,0,165,400,False,0,Arial,8,-2147483643,1)
+gui.Form1.lbl1.create(label,"Order Number",True,1935,255,0,165,185,True,0,Arial,8,-2147483633,0)
+gui.Form1.txtCustomer.create(textbox,"",True,2190,300,0,1610,400,False,0,Arial,8,-2147483643,1)
+gui.Form1.lbl2.create(label,"Customer",True,1500,255,0,1610,185,True,0,Arial,8,-2147483633,0)
+gui.Form1.txtOrderDate.create(textbox,"",True,1230,300,0,3900,400,False,0,Arial,8,-2147483643,1)
+gui.Form1.lbl3.create(label,"Order Date",True,930,255,0,3900,185,True,0,Arial,8,-2147483633,0)
+gui.Form1.txtDueDate.create(textbox,"",True,1200,300,0,165,1145,False,0,Arial,8,-2147483643,1)
+gui.Form1.lbl4.create(label,"Due Date",True,930,255,0,165,935,True,0,Arial,8,-2147483633,0)
+gui.Form1.txtCustomerPO.create(textbox,"",True,1290,300,0,1395,1145,False,0,Arial,8,-2147483643,1)
+gui.Form1.lbl5.create(label,"Customer PO",True,1050,255,0,1395,935,True,0,Arial,8,-2147483633,0)
+gui.Form1.txtSalesRep.create(textbox,"",True,810,315,0,2760,1145,False,0,Arial,8,-2147483643,1)
+gui.Form1.lbl6.create(label,"Sales Rep",True,1395,255,0,2760,935,True,0,Arial,8,-2147483633,0)
+gui.Form1.txtCategory.create(textbox,"",True,2100,300,0,3655,1145,False,0,Arial,8,-2147483643,1)
+gui.Form1.lbl7.create(label,"Category",True,1170,255,0,3655,935,True,0,Arial,8,-2147483633,0)
+gui.Form1.mltxtComments.create(textboxm)
+gui.Form1.mltxtComments.text("")
+gui.Form1.mltxtComments.visible(True)
+gui.Form1.mltxtComments.size(5805,4335)
+gui.Form1.mltxtComments.zorder(0)
+gui.Form1.mltxtComments.position(165,1890)
+gui.Form1.mltxtComments.enabled(False)
+gui.Form1.mltxtComments.alignment(0)
+gui.Form1.mltxtComments.fontname("Arial")
+gui.Form1.mltxtComments.fontsize(8)
+gui.Form1.mltxtComments.BackColor(-2147483643)
+gui.Form1.lbl8.create(label,"Comments",True,1935,255,0,165,1650,True,0,Arial,8,-2147483633,0)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+' Custom fields for quotes and orders
+' Originally for Gayesco
+' 1/125/10
+' JSO
+' Hook custom (OE -> View)
+
+Function.ODBC.Connection!con.OpenConnection(Variable.Ambient.PDSN,Variable.Ambient.PUser,Variable.Ambient.PPass)
+
+Gui.form1..show
+
+
+
+Program.Sub.Main.End
+
+program.sub.cmd1_click.start
+Variable.local.sTitle.Declare(String)
+Variable.Local.sSQL.Declare(String)
+Variable.Local.sCol.Declare(String)
+Variable.Local.sWidth.Declare(String)
+Variable.Local.sRet.Declare(String)
+
+
+V.Local.sTitle.Set("Select Order")
+V.Local.sSQL.Set("select order_no, customer, date_order from v_order_header A, ATG_89_G_ORDER_CSTM B where A.order_no=B.orderno order by order_no")
+F.Intrinsic.String.Split("ORDER*!*CUSTOMER*!*ORDER DATE","*!*",V.Local.sCol)
+F.Intrinsic.String.Split("2000*!*4000*!*4000","*!*",V.Local.sWidth)
+F.intrinsic.UI.Browser(V.Local.sTitle,"con",V.Local.sSQL,V.Local.sCol,V.Local.sWidth,V.Local.sret)
+F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+	F.Intrinsic.string.split(V.local.sret,"*!*",V.local.sret)
+	F.Intrinsic.String.Concat("SELECT DATE_ORDER, DATE_DUE, CUSTOMER_PO, SALESPERSON, CATEGORY, COMMENTS FROM V_ORDER_HEADER A, ATG_89_G_ORDER_CSTM B WHERE A.ORDER_NO = B.ORDERNO AND A.ORDER_NO = '",V.Local.sRet(0),"'",V.Local.sSQL)
+	F.ODBC.Connection!con.OpenRecordsetRO("rst",V.Local.sSQL)
+	F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+		Gui.Form1.mltxtComments.Text(V.ODBC.con!rst.FieldValTrim!COMMENTS)
+		Gui.Form1.txtCategory.Text(V.ODBC.con!rst.FieldValTrim!CATEGORY)
+		Gui.Form1.txtCustomer.Text(V.local.sRet(1))
+		Gui.Form1.txtCustomerPO.Text(V.ODBC.con!rst.FieldValTrim!CUSTOMER_PO)
+		Gui.Form1.txtDueDate.Text(V.ODBC.con!rst.FieldValTrim!DATE_DUE)
+		Gui.Form1.txtOrderDate.Text(V.ODBC.con!rst.FieldValTrim!DATE_ORDER)
+		Gui.Form1.txtOrderNum.Text(V.Local.sRet(0))
+		Gui.Form1.txtSalesRep.Text(V.ODBC.con!rst.FieldValTrim!SALESPERSON)
+	F.ODBC.con!rst.Close
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+
+
+
+program.sub.cmd1_click.end
+
+program.sub.form1_unload.start
+Function.Intrinsic.Control.End
+
+Function.ODBC.Connection!Con.close
+
+program.sub.form1_unload.end
+
+
